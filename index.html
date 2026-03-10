@@ -1,0 +1,300 @@
+<style>
+body{
+font-family:Arial, sans-serif;
+background:#f5f5f5;
+}
+
+/* Form */
+.formbox{
+max-width:500px;
+margin:auto;
+background:white;
+padding:20px;
+border:2px solid black;
+margin-bottom:20px;
+}
+
+input{
+width:100%;
+padding:8px;
+margin:6px 0 10px 0;
+}
+
+button{
+padding:10px 20px;
+background:black;
+color:white;
+border:none;
+cursor:pointer;
+}
+
+/* Receipt Layout */
+.container{
+width:210mm;
+margin:auto;
+}
+
+.receipt{
+border:2px solid black;
+padding:18px;
+height:135mm;
+margin-bottom:5mm;
+box-sizing:border-box;
+background:white;
+}
+
+.header{
+text-align:center;
+border-bottom:2px solid black;
+padding-bottom:8px;
+margin-bottom:12px;
+background:white;
+}
+
+.title{
+font-size:20px;
+font-weight:bold;
+}
+
+.subtitle{
+font-size:14px;
+}
+
+.details{
+line-height:1.7;
+font-size:15px;
+}
+
+.message{
+margin-top:18px;
+line-height:1.6;
+font-size:15px;
+}
+
+.footer{
+margin-top:18px;
+font-weight:bold;
+}
+
+.error{
+color:red;
+}
+</style>
+
+
+<div class="formbox">
+
+<h3>Generate Receipt</h3>
+
+<label>ITS Number</label>
+<input type="text" id="its" maxlength="8">
+
+<div class="error" id="itserror"></div>
+
+<label>Amount</label>
+<input type="number" id="amount">
+
+<br>
+
+<button onclick="generateReceipt()">Generate Receipt</button>
+<button onclick="printReceipt()">Print</button>
+
+</div>
+
+
+
+<div class="container">
+
+<div class="receipt" id="receipt1"></div>
+<div class="receipt" id="receipt2"></div>
+
+</div>
+
+
+
+<script>
+
+/* Generate Receipt */
+
+function generateReceipt(){
+
+let its=document.getElementById("its").value.trim();
+let amount=document.getElementById("amount").value;
+
+let error=document.getElementById("itserror");
+
+if(!/^[0-9]{8}$/.test(its)){
+error.innerHTML="ITS must be exactly 8 digits";
+return;
+}
+
+error.innerHTML="";
+
+let date=new Date().toLocaleDateString();
+
+/* Call Google Script */
+
+fetch("https://script.google.com/macros/s/AKfycbwMUAKuUY4BYYwO4UKTNK9c_U4zo-cYZ4Ae4oHcB0EMMRohETFkEdHf30oHEqJEJGb1/exec",{
+
+method:"POST",
+
+body:JSON.stringify({
+its:its,
+amount:amount,
+date:date
+})
+
+})
+
+.then(res=>res.json())
+.then(data=>{
+
+if(data.status==="duplicate"){
+alert("Receipt already generated for this ITS");
+return;
+}
+
+let receiptNo=data.receipt;
+
+/* Receipt HTML */
+
+let receiptHTML=`
+
+<div class="header">
+<div class="title">Faiz ul Mawaid Burhaniyah Receipt</div>
+<div class="subtitle">Lunawada Jamat – 1447H</div>
+<div class="subtitle">Lailatul Qadr ni Mubarak Raat</div>
+</div>
+
+<div class="details">
+<b>Receipt No:</b> ${receiptNo}<br>
+<b>Date:</b> ${date}<br>
+<b>ITS:</b> ${its}<br>
+<b>Amount:</b> ₹ ${amount}
+</div>
+
+<div class="message">
+
+Afazlus Salams,<br><br>
+
+Aqa Maula (TUS) ni khushi mubarak hasil karta huwa,
+aap aaj ni <b>Lailatul Qadr ni mubarak raat</b> ma
+<b>Faiz ul Mawaid Burhaniyah</b> ni khidmat ma niyaz ni
+raqam adaa kari ne shamil thaya cho.<br><br>
+
+Allah Ta'ala aapni aa khidmat qabool farmawe
+ane Aqa Maula (TUS) ni raza ane khushi hasil thae.
+
+</div>
+
+<div class="footer">
+Faiz ul Mawaid Burhaniyah<br>
+Lunawada Jamat – 1447H
+</div>
+
+<p>Wassalam</p>
+
+`;
+
+document.getElementById("receipt1").innerHTML=receiptHTML;
+document.getElementById("receipt2").innerHTML=receiptHTML;
+
+});
+
+}
+
+
+
+/* Print Only Receipt */
+
+function printReceipt(){
+
+let receipt=document.querySelector(".container").outerHTML;
+
+let win=window.open("", "PrintWindow");
+
+win.document.write(`
+<html>
+<head>
+<title>Print Receipt</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+padding:10px;
+}
+
+.container{
+width:210mm;
+margin:auto;
+}
+
+.receipt{
+border:2px solid black;
+padding:18px;
+height:135mm;
+margin-bottom:5mm;
+box-sizing:border-box;
+}
+
+.header{
+text-align:center;
+border-bottom:2px solid black;
+margin-bottom:12px;
+padding-bottom:8px;
+}
+
+.title{
+font-size:20px;
+font-weight:bold;
+}
+
+.subtitle{
+font-size:14px;
+}
+
+.details{
+line-height:1.7;
+font-size:15px;
+}
+
+.message{
+margin-top:18px;
+line-height:1.6;
+font-size:15px;
+}
+
+.footer{
+margin-top:18px;
+font-weight:bold;
+}
+
+@page{
+size:A4;
+margin:10mm;
+}
+
+</style>
+
+</head>
+
+<body>
+
+${receipt}
+
+</body>
+</html>
+`);
+
+win.document.close();
+
+setTimeout(function(){
+win.print();
+win.close();
+},500);
+
+}
+
+</script>
