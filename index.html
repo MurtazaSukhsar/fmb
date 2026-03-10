@@ -119,6 +119,11 @@ font-weight:bold;
 
 <script>
 
+/* Local ITS cache to prevent duplicate */
+
+let usedITS = new Set();
+
+
 function generateReceipt(){
 
 let its=document.getElementById("its").value.trim();
@@ -129,7 +134,24 @@ alert("ITS must be exactly 8 digits");
 return;
 }
 
+/* Duplicate ITS prevention */
+
+if(usedITS.has(its)){
+alert("Receipt already generated for this ITS");
+return;
+}
+
+usedITS.add(its);
+
 let date=new Date().toLocaleDateString();
+
+/* Generate receipt immediately */
+
+let receiptNo="Processing...";
+
+renderReceipt(receiptNo,its,amount,date);
+
+/* Fetch sequential receipt from server */
 
 fetch("https://script.google.com/macros/s/AKfycbwMUAKuUY4BYYwO4UKTNK9c_U4zo-cYZ4Ae4oHcB0EMMRohETFkEdHf30oHEqJEJGb1/exec",{
 
@@ -146,7 +168,16 @@ date:date
 .then(res=>res.json())
 .then(data=>{
 
-let receiptNo=data.receipt;
+renderReceipt(data.receipt,its,amount,date);
+
+});
+
+}
+
+
+/* Render receipt */
+
+function renderReceipt(receiptNo,its,amount,date){
 
 let receiptHTML=`
 
@@ -189,11 +220,11 @@ Lunawada Jamat – 1447H
 document.getElementById("receipt1").innerHTML=receiptHTML;
 document.getElementById("receipt2").innerHTML=receiptHTML;
 
-});
-
 }
 
 
+
+/* Print */
 
 function printReceipt(){
 
@@ -248,7 +279,7 @@ win.document.close();
 setTimeout(function(){
 win.print();
 win.close();
-},400);
+},200);
 
 }
 
