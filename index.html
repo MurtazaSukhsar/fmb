@@ -1,10 +1,19 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<title>Receipt Generator</title>
+
 <style>
+
 body{
-font-family:Arial, sans-serif;
+font-family:Arial;
 background:#f5f5f5;
 }
 
-/* Form */
+/* FORM */
 
 .formbox{
 max-width:500px;
@@ -29,7 +38,7 @@ border:none;
 cursor:pointer;
 }
 
-/* Receipt */
+/* RECEIPT */
 
 .container{
 width:210mm;
@@ -81,8 +90,13 @@ font-weight:bold;
 .error{
 color:red;
 }
+
 </style>
 
+</head>
+
+
+<body>
 
 
 <div class="formbox">
@@ -117,7 +131,7 @@ color:red;
 
 <script>
 
-/* FAST GENERATE RECEIPT */
+/* GENERATE RECEIPT */
 
 function generateReceipt(){
 
@@ -135,11 +149,31 @@ error.innerHTML="";
 
 let date=new Date().toLocaleDateString();
 
-/* FAST LOCAL RECEIPT NUMBER */
+/* CALL GOOGLE SCRIPT */
 
-let receiptNo="R-"+Date.now();
+fetch("https://script.google.com/macros/s/AKfycbwMUAKuUY4BYYwO4UKTNK9c_U4zo-cYZ4Ae4oHcB0EMMRohETFkEdHf30oHEqJEJGb1/exec",{
 
-/* GENERATE RECEIPT INSTANTLY */
+method:"POST",
+
+body:JSON.stringify({
+its:its,
+amount:amount,
+date:date
+})
+
+})
+
+.then(res=>res.json())
+.then(data=>{
+
+if(data.status==="duplicate"){
+alert("Receipt already generated for this ITS");
+return;
+}
+
+let receiptNo=data.receipt;
+
+/* RECEIPT HTML */
 
 let receiptHTML=`
 
@@ -182,23 +216,13 @@ Lunawada Jamat – 1447H
 document.getElementById("receipt1").innerHTML=receiptHTML;
 document.getElementById("receipt2").innerHTML=receiptHTML;
 
-
-/* SAVE TO GOOGLE SHEET IN BACKGROUND */
-
-fetch("https://script.google.com/macros/s/AKfycbwMUAKuUY4BYYwO4UKTNK9c_U4zo-cYZ4Ae4oHcB0EMMRohETFkEdHf30oHEqJEJGb1/exec",{
-method:"POST",
-body:JSON.stringify({
-its:its,
-amount:amount,
-date:date
-})
 });
 
 }
 
 
 
-/* CLEAN PRINT */
+/* PRINT */
 
 function printReceipt(){
 
@@ -291,3 +315,7 @@ win.close();
 }
 
 </script>
+
+
+</body>
+</html>
